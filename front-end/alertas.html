@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Alertas de Estoque Baixo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1> Alertas de Estoque Baixo</h1>
+    </header>
+    <main>
+        <section class="tabela-container">
+            <h2>Produtos Abaixo do Nível Mínimo</h2>
+            <div id="loading" class="status-message">Verificando alertas...</div>
+            <table id="tabelaAlertas">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Marca</th>
+                        <th>Estoque Atual</th>
+                        <th>Estoque Mínimo</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </section>
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', carregarAlertas);
+
+        async function carregarAlertas() {
+            const loadingElement = document.getElementById('loading');
+            const tbody = document.querySelector('#tabelaAlertas tbody');
+            tbody.innerHTML = '';
+
+            try {
+              
+                const response = await fetch('http://localhost:3001/alertas');
+                if (!response.ok) {
+                    throw new Error('Falha ao buscar alertas: ' + response.statusText);
+                }
+                
+                const alertas = await response.json();
+                loadingElement.style.display = 'none';
+
+                if (alertas.length === 0) {
+                    loadingElement.textContent = 'Nenhum alerta de estoque no momento.';
+                    loadingElement.classList.add('success');
+                    loadingElement.style.display = 'block';
+                    return;
+                }
+                
+             
+                loadingElement.textContent = ` ${alertas.length} Produto(s) em estado de alerta.`;
+                loadingElement.classList.remove('success');
+                loadingElement.classList.add('error');
+                loadingElement.style.display = 'block';
+
+                alertas.forEach(produto => {
+                    const row = tbody.insertRow();
+                    row.insertCell().textContent = produto.id;
+                    row.insertCell().textContent = produto.nome;
+                    row.insertCell().textContent = produto.marca;
+                    
+                    const atualCell = row.insertCell();
+                    atualCell.textContent = produto.quantidade;
+                    
+                    row.insertCell().textContent = produto.estoque_minimo;
+                    
+                    const statusCell = row.insertCell();
+                    statusCell.textContent = 'URGENTE';
+                    statusCell.style.fontWeight = 'bold';
+                    
+                    row.style.backgroundColor = '#fff0f0'; 
+                });
+
+            } catch (error) {
+                loadingElement.textContent = 'Erro de conexão com a API.';
+                loadingElement.classList.add('error');
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>

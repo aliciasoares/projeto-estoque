@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Produto - Estoque</title>
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body>
+    <header>
+        <h1>Cadastrar Novo Produto</h1>
+    </header>
+    
+    <main>
+        <section class="formulario-container">
+            <h2>Dados do Produto</h2>
+            <form id="formCadastroProduto">
+                
+                <div class="form-group">
+                    <label for="nome">Nome do Produto:</label>
+                    <input type="text" id="nome" name="nome" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="marca">Marca:</label>
+                    <input type="text" id="marca" name="marca" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="volume">Volume/Tamanho:</label>
+                    <input type="text" id="volume" name="volume" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="tipo_embalagem">Tipo de Embalagem:</label>
+                    <input type="text" id="tipo_embalagem" name="tipo_embalagem" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="aplicacao">Aplicação:</label>
+                    <select id="aplicacao" name="aplicacao" required>
+                        <option value="domestica">Doméstica</option>
+                        <option value="industrial">Industrial</option>
+                        <option value="hospitalar">Hospitalar</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="estoque_minimo">Estoque Mínimo (Alerta):</label>
+                    <input type="number" id="estoque_minimo" name="estoque_minimo" required min="0" value="10">
+                </div>
+
+                <button type="submit" class="btn-submit">Cadastrar Produto</button>
+            </form>
+            
+            <p id="mensagemStatus" class="status-message"></p>
+        </section>
+    </main>
+    
+
+    <script src="cadastro_produto.js"></script>
+</body>
+</html>

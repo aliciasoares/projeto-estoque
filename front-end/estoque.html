@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Estoque Geral</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Estoque Geral de Produtos</h1>
+    </header>
+    <main>
+        <section class="tabela-container">
+            <h2>Lista Completa de Itens</h2>
+            <div id="loading" class="status-message">Carregando dados...</div>
+            <table id="tabelaProdutos">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Marca</th>
+                        <th>Volume</th>
+                        <th>Aplicação</th>
+                        <th>Estoque Atual</th>
+                        <th>Estoque Mínimo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </section>
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', carregarProdutos);
+
+        async function carregarProdutos() {
+            const loadingElement = document.getElementById('loading');
+            const tbody = document.querySelector('#tabelaProdutos tbody');
+            tbody.innerHTML = ''; 
+
+            try {
+                
+                const response = await fetch('http://localhost:3001/produtos');
+                
+                if (!response.ok) {
+                    throw new Error('Falha ao buscar dados: ' + response.statusText);
+                }
+                
+                const produtos = await response.json();
+                loadingElement.style.display = 'none';
+
+                if (produtos.length === 0) {
+                    loadingElement.textContent = 'Nenhum produto cadastrado.';
+                    loadingElement.style.display = 'block';
+                    return;
+                }
+
+                produtos.forEach(produto => {
+                    const row = tbody.insertRow();
+                    row.insertCell().textContent = produto.id;
+                    row.insertCell().textContent = produto.nome;
+                    row.insertCell().textContent = produto.marca;
+                    row.insertCell().textContent = produto.volume;
+                    row.insertCell().textContent = produto.aplicacao;
+                    
+                  
+                    const quantidadeCell = row.insertCell();
+                    quantidadeCell.textContent = produto.quantidade;
+                    
+                  
+                    if (produto.quantidade < produto.estoque_minimo) {
+                        quantidadeCell.style.fontWeight = 'bold';
+                        quantidadeCell.style.color = 'red';
+                    }
+
+                    row.insertCell().textContent = produto.estoque_minimo;
+                });
+
+            } catch (error) {
+                loadingElement.textContent = 'Erro de conexão com a API.';
+                loadingElement.classList.add('error');
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
