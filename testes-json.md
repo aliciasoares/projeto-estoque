@@ -1,4 +1,4 @@
-# Testes feitos com o JSON (testados no ThunderClient)
+# Testes feitos em JSON (testados no ThunderClient)
 # GET 
 ## Endereço: localhost:3001/produtos
 ```json 
