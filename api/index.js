@@ -1,41 +1,61 @@
+// necessário instalar essas dependencias antes pelo terminal npm 
+
 const express = require('express')
 const mysql = require('mysql2/promise')
-const cors = require('cors')
-const path = require('path');
+const cors = require('cors') 
 
+// configurações do banco de dados (com os dados que aparecem antes de iniciar o heidi)
+// conn seria o pool de conexões
 const conn = mysql.createPool({ 
     host: "localhost", 
     user: "root",
-    password: "",
+    password: "", 
     database: "estoque" 
 })
 
 const app = express()
+app.use(cors()) // isso vai habilitar o cors
 app.use(express.json()) 
-
-app.use(cors())
-
-
-app.use(express.static(path.join(__dirname, '../front-end')));
 
 const PORT = 3001
 app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`)
+    console.log(`Servidor rodando na porta ${PORT}.`)
 })
 
-
+// rota de documentação
 app.get("/", (req, res) => {
     res.json({
         documentacao: "API de Controle de Estoque de Produtos de Limpeza",
         rotas_disponiveis: {
+            "/": "GET - Obtém todas as rotas disponíveis (esta documentação)",
             "/produtos": "POST - Cadastra um novo produto",
             "/produtos": "GET - Lista todos os produtos",
             "/estoque/entrada": "PUT - Registra entrada de estoque",
-            "/estoque/saida": "PUT - Registra saída de estoque",
-            "/alertas": "GET - Produtos abaixo do estoque mínimo"
+            "/estoque/saida": "PUT - Registra saída de estoque",    
+            "/alertas": "GET - Produtos abaixo do estoque mínimo"  
         }
     })
+}) 
+
+
+// essa rota alimenta o estoque.html
+app.get("/produtos", async (req, res) => {
+    try {
+        const sql = "SELECT * FROM produtos";
+        // o pool (conn) vai retornar uma lista [rows, fields]
+        const [produtos] = await conn.query(sql);
+
+        // retorna todos os produtos encontrados (que o estoque.html espera)
+        res.status(200).json(produtos);
+
+    } catch (error) {
+        console.error('Erro ao listar produtos:', error);
+        res.status(500).json({ Msg: "Erro interno ao buscar lista de produtos." });
+    }
 })
+
+/
+// cadastro (POST /produtos) 
 
 
 app.post("/produtos", async (req, res) => {
@@ -48,68 +68,36 @@ app.post("/produtos", async (req, res) => {
     ) VALUES (?, ?, ?, ?, ?, ?, 0)`
 
     try {
-     
         const [result] = await conn.query(sql, [
             nome, marca, volume, tipo_embalagem, aplicacao, estoque_minimo
         ])
         
         res.status(201).json({ 
-            Msg: "Produto cadastrado com sucesso e salvo no banco de dados", 
+            Msg: "Produto cadastrado com sucesso", 
             id: result.insertId 
         })
     } catch (error) {
-        console.error('Erro ao cadastrar produto no banco:', error)
-        res.status(500).json({ Msg: "Erro interno ao cadastrar produto" })
+        console.error('ERRO CRÍTICO NO BANCO:', error)
+        res.status(500).json({ Msg: "Erro interno ao cadastrar produto. Verifique a conexão MySQL." })
     }
 })
 
 
-app.get("/produtos", async (req, res) => {
-    const sql = "SELECT id, nome, marca, volume, tipo_embalagem, aplicacao, quantidade, estoque_minimo FROM produtos" 
-
-    try {
-        const [rows] = await conn.query(sql)
-        
-        res.json({ 
-            Msg: "Lista de Produtos",
-            produtos: rows 
-        })
-    } catch (error) {
-        console.error('Erro ao buscar produtos:', error)
-        res.status(500).json({ Msg: "Erro interno ao buscar produtos" })
-    }
-})
-
-
+// listar os alertas (GET /alertas) - para alertas.html
 
 app.get("/alertas", async (req, res) => {
-    const sql = "SELECT nome, marca, quantidade, estoque_minimo FROM produtos WHERE quantidade < estoque_minimo" 
-
     try {
-        const [rows] = await conn.query(sql) 
+        // busca produtos onde a quantidade é menor que o estoque_minimo
+        const sql = "SELECT * FROM produtos WHERE quantidade < estoque_minimo";
+        const [alertas] = await conn.query(sql);
 
-        if (rows.length === 0) {
-            return res.json({ 
-                Msg: " Nenhum produto abaixo do estoque mínimo.",
-                alertas: [] 
-            })
-        }
-        
-        const alertas = rows.map(produto => ({
-            produto: `${produto.nome} (${produto.marca})`,
-            situacao: `Estoque Atual: ${produto.quantidade}, Estoque Mínimo: ${produto.estoque_minimo}`
-        }))
-        
-        res.json({ 
-            Msg: `⚠️ ${rows.length} ALERTA(S) de estoque baixo.`,
-            alertas: alertas
-        })
+        res.status(200).json(alertas);
+
     } catch (error) {
-        console.error('Erro ao buscar alertas:', error)
-        res.status(500).json({ Msg: "Erro interno ao buscar alertas" })
+        console.error('Erro ao buscar alertas:', error);
+        res.status(500).json({ Msg: "Erro interno ao buscar alertas de estoque." });
     }
 })
-
 
 
 app.put("/estoque/entrada", async (req, res) => {
@@ -166,7 +154,7 @@ app.put("/estoque/entrada", async (req, res) => {
     }
 })
 
-
+// rotas do put (registrar entrada e saida do estoque )
 app.put("/estoque/saida", async (req, res) => {
     const { produto_id, quantidade, responsavel } = req.body
     
