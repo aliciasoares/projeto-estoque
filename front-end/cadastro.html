@@ -8,7 +8,7 @@
 </head>
 <body>
     <header>
-        <h1>Cadastrar Novo Produto</h1>
+        <h1>Cadastrar novo produto</h1>
     </header>
     
     <main>
@@ -46,7 +46,7 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="estoque_minimo">Estoque Mínimo (Alerta):</label>
+                    <label for="estoque_minimo">Estoque Mínimo:</label>
                     <input type="number" id="estoque_minimo" name="estoque_minimo" required min="0" value="10">
                 </div>
 
@@ -58,6 +58,44 @@
     </main>
     
 
-    <script src="cadastro_produto.js"></script>
+    <script>
+        document.getElementById("formCadastroProduto").addEventListener("submit", async (event) => {
+    event.preventDefault(); 
+
+    const formData = {
+        nome: document.getElementById("nome").value,
+        marca: document.getElementById("marca").value,
+        volume: document.getElementById("volume").value,
+        tipo_embalagem: document.getElementById("tipo_embalagem").value,
+        aplicacao: document.getElementById("aplicacao").value,
+        estoque_minimo: document.getElementById("estoque_minimo").value
+    };
+
+    try {
+        const response = await fetch("http://localhost:3001/produtos", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            document.getElementById("mensagemStatus").textContent = result.Msg;
+            document.getElementById("mensagemStatus").classList.add("success");
+        } else {
+            document.getElementById("mensagemStatus").textContent = result.Msg || "Erro ao cadastrar produto.";
+            document.getElementById("mensagemStatus").classList.add("error");
+        }
+    } catch (error) {
+        console.error("Erro ao enviar requisição:", error);
+        document.getElementById("mensagemStatus").textContent = "Erro ao conectar com o servidor.";
+        document.getElementById("mensagemStatus").classList.add("error");
+    }
+});
+
+    </script>
 </body>
 </html>
